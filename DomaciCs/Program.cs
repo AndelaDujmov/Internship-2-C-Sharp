@@ -26,8 +26,9 @@ var igrači = new Dictionary<string, (string Position, int Rating)>()
     
 };
 
+//----------- odrađivanje treninga----------------------------
 
-int returnValue(int rating)
+int ReturnValue(int rating)
 {
     Random random = new Random();
     var rankingRandom =  -0.05 +  (0.05 - (-0.05)) * random.NextDouble();
@@ -37,22 +38,40 @@ int returnValue(int rating)
 
 Dictionary<string, (string Position, int Rating)> Training(Dictionary<string, (string Position, int Rating)> dictionary)
 {
-    foreach (var player in dictionary.Keys)
+    var updated = new Dictionary<string, (string Position, int Rating)>();
+    
+    Console.WriteLine($"Odabrali ste opciju {izbornik[1]}");
+    
+    foreach (var dict in dictionary)
     {
         Console.WriteLine("Trening u toku...");
-        //player.Rating = returnValue(player.Rating);
+        updated.Add(dict.Key, (dict.Value.Position, ReturnValue(dict.Value.Rating)));
     }
 
-    Console.WriteLine("Trening uspješno odrađen!");
-    foreach (var player in dictionary)
+    Console.WriteLine("Trening odrađen!");
+    foreach (var dict in updated)
     {
-        Console.WriteLine($"{player.Key} ima trenutan rating od {player.Value.Rating}");
+        Console.WriteLine($"Igrač {dict.Key} ima ranking od {dict.Value.Rating}");
     }
-
-    return dictionary;
+    
+    return updated;
 }
 
 
+//-----odigraj utakmicu -------
+
+Dictionary<string, (string Position, int Rating)> PlayTheGame(Dictionary<string, (string Position, int Rating)> dictionary)
+{
+    var afterGame = new Dictionary<string, (string Position, int Rating)>();
+    var strijelac = 0;
+    var GK
+    foreach (var player in dictionary)
+    {
+        
+    }
+}
+
+//----------------unos igrača-----------------
 Dictionary<string, (string Position, int Rating)> EnterThePlayer(Dictionary<string, (string Position, int Rating)> dictionary)
 {
     var ime = "";
@@ -93,6 +112,8 @@ Dictionary<string, (string Position, int Rating)> EnterThePlayer(Dictionary<stri
     return dictionary;
 }
 
+
+//-----glavni izbornik-------
 Console.WriteLine("Dobrodošli na glavni izbornik! Izaberite jednu od navedenih opcija!");
 foreach (var i in izbornik)
 {
@@ -105,6 +126,7 @@ int.TryParse(Console.ReadLine(), out izbor);
 switch (izbor)
 {
     case 1:
+        Console.Clear();
         Console.WriteLine($"Odabrali ste izbor {izbornik[1]}");
         igrači = Training(igrači);
         break;
@@ -112,7 +134,9 @@ switch (izbor)
         Console.WriteLine($"Odabrali ste izbor {izbornik[0]}");
         break;
     case 2: 
+        Console.Clear();
         Console.WriteLine($"Odabrali ste izbor {izbornik[2]}");
+        igrači = PlayTheGame(igrači);
         break;
     case 3: 
         Console.WriteLine($"Odabrali ste izbor {izbornik[3]}");
