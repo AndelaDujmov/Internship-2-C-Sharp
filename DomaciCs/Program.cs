@@ -15,7 +15,7 @@ var igrači = new Dictionary<string, (string Position, int Rating)>()
     {"Marcelo Brozović", ("DF", 77)},
     {"Mateo Kovačić", ("MF", 78)},
     {"Ivan Perišić", ("MF", 76)},
-    {"Andrej Kramarić", ("MF", 67)},
+    {"Andrej Kramarić", ("DF", 67)},
     {"Joško Gvarilov", ("MF", 77)},
     {"Ivan Rakitić", ("FW", 67)},
     {"Mario Pašalić", ("MF", 87)},
@@ -24,8 +24,13 @@ var igrači = new Dictionary<string, (string Position, int Rating)>()
     {"Ante Rebić", ("FW", 63)},
     {"Josip Brekalo", ("MF", 67)},
     {"Borna Sosa", ("DF", 78)},
-    {"Nikola Vlašić", ("FW", 87)}
-    
+    {"Nikola Vlašić", ("FW", 87)},
+    {"Duje Ćaleta - Car", ("MF", 56)},
+    {"Dejan Lovren", ("FW", 77)},
+    {"Marko Livaja", ("DF", 89)},
+    {"Domagoj Vida", ("MF", 78)},
+    {"Mislav Oršić", ("FW", 67)},
+    {"Ante Budimir", ("FW", 97)}
 };
 
 //----------- odrađivanje treninga----------------------------
@@ -122,19 +127,19 @@ void PrintPlayersAsc()
         MainMenu();
 }
 
-//ne radi kako triba
 void PrintPlayersDesc()
 {
-    var descending = igrači.OrderByDescending(u => u.Value).ToDictionary(z => z.Key, y => y.Value);
+    var descending = igrači.OrderByDescending(u => u.Value.Rating)
+                                                     .ToDictionary(z => z.Key, y=>(y.Value.Position, y.Value.Rating));
     descending.ToList().ForEach(player => Console.WriteLine($"Igrač {player.Key} s ratingom {player.Value.Rating}"));
     Console.WriteLine("Želite li povratak na glavni meni? y/n");
     var ans = Console.ReadLine();
 
+    
     if (ans.Equals("y"))
         MainMenu();
 }
 
-//ne razumijem u cemu se razlikuje od 1.
 void PrintPlayersByName()
 {
     igrači.ToList().ForEach(player => Console.WriteLine($"Igrač {player.Key} na poziciji {player.Value.Position} s ratingom {player.Value.Rating}"));
@@ -143,6 +148,52 @@ void PrintPlayersByName()
 
     if (ans.Equals("y"))
         MainMenu();
+}
+
+void PrintPlayersByRating()
+{
+    Console.Clear();
+    Console.WriteLine("Odabrali ste Ispis igrača po ratingu");
+    Console.WriteLine("Unesite rating igrača kojeg/ih želite ispisati!");
+    int ranked = 0;
+    int.TryParse(Console.ReadLine(), out ranked);
+
+    foreach (var igrač in igrači)
+    {
+        if (igrač.Value.Rating.Equals(ranked))
+            Console.WriteLine($"Igrač s rankom {ranked} je {igrač.Key}");
+    }
+    
+}
+
+void PrintPlayersByPosition()
+{
+    Console.Clear();
+    Console.WriteLine("Odabrali ste Ispis igrača po poziciji");
+    Console.WriteLine("Unesite poziciju igrača kojeg/ih želite ispisati!");
+    var position = Console.ReadLine().ToUpper();
+
+    if (!position.Equals("GK") && !position.Equals("FW") && !position.Equals("DF") && !position.Equals("MF"))
+    {
+        Console.WriteLine($"Nema ni jednog igrača sa pozicijom {position}");
+    }
+
+    else
+    {
+        foreach (var igrač in igrači)
+        {
+            if (igrač.Value.Position.Equals(position))
+                Console.WriteLine($"Igrač s pozicijom {position} je {igrač.Key}");
+        }
+    }
+        
+    Console.WriteLine("Želite li povratak na glavni meni? y/n");
+    var ans = Console.ReadLine();
+
+    if (ans.Equals("y")) // zamjeni s tenarnim operatorom
+        MainMenu();
+    return;
+
 }
 
 void PrintPlayers()
@@ -183,8 +234,12 @@ void PrintPlayers()
             PrintPlayersByName();
             break;
         case 5:
+            Console.WriteLine("Izabrali ste opciju Ispis igrača po Ratingu");
+            PrintPlayersByRating();
             break;
         case 6:
+            Console.WriteLine("Izabrali ste opciju Ispis igrača po Poziciji");
+            PrintPlayersByPosition();
             break;
         case 7:
             break;
