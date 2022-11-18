@@ -33,6 +33,8 @@ var igrači = new Dictionary<string, (string Position, int Rating)>()
     {"Ante Budimir", ("FW", 97)}
 };
 
+var strijelci = new Dictionary<string, (string Position, int Rating, int Goals)>(){};
+
 //----------- odrađivanje treninga----------------------------
 
 int ReturnValue(int rating)
@@ -73,21 +75,34 @@ void Training()
 
 //-----odigraj utakmicu -------
 
-void PlayTheGame()
+void FindTheAttackers(Dictionary<string, (string Position, int Rating)> team)
+{
+    foreach (var item in team)
+    {
+        if (item.Value.Position.Equals("FW"))
+        {
+            strijelci.Add(item.Key, (item.Value.Position, item.Value.Rating, 0));
+        }
+    }
+}
+
+Dictionary<string, (string Position, int Rating)> CreateTheTeam()
 
 {
     var team = new Dictionary<string, (string Position, int Rating)>();
     var GK = (Name: "", Position: "", Rating: 0);
-    var DF = new List<Tuple<string, string, int>>();
-    var MF = new List<Tuple<string, string, int>>();
-    var FW = new List<Tuple<string, string, int>>();
 
     var strijelac = 0;
     var rezultat = 0;
+    var count1 = 0;
+    var count2 = 0;
+    var count3 = 0;
     foreach (var player in igrači)
     {
         if (team.Count == 11)
             break;
+
+      
 
         if (player.Value.Rating > GK.Rating && player.Value.Position.Equals("GK"))
         {
@@ -95,13 +110,66 @@ void PlayTheGame()
             team.Add(GK.Name, (GK.Position, GK.Rating));
         }
 
-    }
-   
-    Console.WriteLine("Želite li povratak na glavni meni? y/n");
-    var ans = Console.ReadLine();
+        if (count1 != 4)
+        {
+            if (player.Value.Position.Equals("DF"))
+            {
+                team.Add(player.Key, (player.Value.Position, player.Value.Rating));
+                count1++;
+            }
+        }
 
-    if (ans.Equals("y"))
-        MainMenu();
+        if (count2 != 3)
+        {
+            if (player.Value.Position.Equals("MF"))
+            {
+                team.Add(player.Key, (player.Value.Position, player.Value.Rating));
+                count2++;
+            }
+        }
+
+        if (count3 != 3)
+        {
+            if (player.Value.Position.Equals("FW"))
+            {
+                team.Add(player.Key, (player.Value.Position, player.Value.Rating));
+                count3++;
+            }
+        }
+
+    }
+    Console.WriteLine("Želite li povratak na glavni meni? y/n");
+   
+    
+    //kreirati funkcije za trazenje scakog od ovih igraca 
+
+    return team;
+}
+
+void PlayTheGame()
+{
+    var team = CreateTheTeam();
+
+    foreach (var player in team)
+    {
+        Console.WriteLine($"player {player.Key} on position {player.Value.Position}");
+    }
+
+    Random random = new Random();
+    int index = random.Next(strijelci.Count);
+    
+    FindTheAttackers(team);
+    var strijelac = strijelci.ElementAt(index);
+    Console.WriteLine($"player {strijelac.Key} on position {strijelac.Value.Position} did the check");
+
+    int goals1 = random.Next(1, 10);
+
+    int Ourgoals = random.Next(1, 10); 
+    
+    Console.WriteLine($"tim 1 je postigao {goals1} golova, a naš tim {Ourgoals} golova");
+    
+    //ako gubi nas tim, mici nasem strijelcu odredeni postotak ranka!!!!
+    
 }
 
 //------------statistika---------------------
@@ -294,7 +362,7 @@ void EnterThePlayer()
     Console.WriteLine("Unesite poziciju igrača: GK, DF, MF ili FW!");
     position = Console.ReadLine().ToUpper();
 
-    if (!position.Equals("GK") || !position.Equals("DF") || !position.Equals("MF") || !position.Equals("FW"))
+    if (!position.Equals("GK") && !position.Equals("DF") && !position.Equals("MF") && !position.Equals("FW"))
     {
         Console.WriteLine("Nije točno unesena pozicija, mora biti jedna od navedenih!");
         
@@ -307,40 +375,33 @@ void EnterThePlayer()
 
     if (rating < 1 || rating > 100)
     {
-         
+          
         Console.WriteLine("Želite li povratak na glavni meni? y/n");
         var ans = Console.ReadLine();
 
         if (ans.Equals("y"))
             MainMenu();
-        return;
+        return;       
     }
 
     if (igrači.Count is 26)
-    {
+    
         Console.WriteLine("Previše igrača uneseno! Oslobodite prostor.");
-         
+    
+    else
+    {
+        if (igrači.ContainsKey(fullName))
+            Console.WriteLine("Ovaj igrač već postoji!");
+        
+
+        igrači.Add(fullName, (position, rating));
+        
         Console.WriteLine("Želite li povratak na glavni meni? y/n");
         var ans = Console.ReadLine();
 
         if (ans.Equals("y"))
             MainMenu();
         return;
-    }
-    else
-    {
-        if (igrači.ContainsKey(fullName))
-        {
-            Console.WriteLine("Ovaj igrač već postoji!");
-            Console.WriteLine("Želite li povratak na glavni meni? y/n");
-            var ans = Console.ReadLine();
-
-            if (ans.Equals("y"))
-                MainMenu();
-            return;
-        }
-
-        igrači.Add(fullName, (position, rating));
     }
 }
 
@@ -356,8 +417,8 @@ void DeleteThePlayer()
 
     foreach (var element in igrači)
     {
-        if(!element.Key.Equals(fullName))
-            newDict.Add(element.Key, (element.Value.Position, element.Value.Rating));
+        if (element.Key.Equals(fullName))
+            igrači.Remove(element.Key);
     }
     
     Console.WriteLine("Želite li povratak na glavni meni? y/n");
@@ -366,7 +427,7 @@ void DeleteThePlayer()
     if (ans.Equals("y"))
         MainMenu();
     
-    igrači = newDict;
+    
 }
 
 //-----uređivanje------
@@ -503,7 +564,6 @@ void EditThePlayerName()
 
 void EditThePlayer()
 {
-    Console.Clear();
     Console.WriteLine("Dobrodošli na izbornik Uređivanja igrača! Izaberite jedno od ponuđenih opcija:");
     Console.WriteLine("1 - Uredi ime i prezime igrača");
     Console.WriteLine("2 - Uredi poziciju igrača (GK, DF, MF ili FW)");
