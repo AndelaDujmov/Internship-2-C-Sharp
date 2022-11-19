@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices.ComTypes;
-
+﻿
 var izbornik = new Dictionary<int, string>()
 {
     {1, "Odradi trening"},
@@ -34,6 +33,8 @@ var igrači = new Dictionary<string, (string Position, int Rating)>()
 };
 
 var strijelci = new Dictionary<string, (string Position, int Rating, int Goals)>(){};
+var team1 = new Dictionary<string, int>();
+var team2 = new Dictionary<string, int>();
 
 //----------- odrađivanje treninga----------------------------
 
@@ -74,17 +75,6 @@ void Training()
 
 
 //-----odigraj utakmicu -------
-
-void FindTheAttackers(Dictionary<string, (string Position, int Rating)> team)
-{
-    foreach (var item in team)
-    {
-        if (item.Value.Position.Equals("FW"))
-        {
-            strijelci.Add(item.Key, (item.Value.Position, item.Value.Rating, 0));
-        }
-    }
-}
 
 Dictionary<string, (string Position, int Rating)> CreateTheTeam()
 
@@ -139,42 +129,129 @@ Dictionary<string, (string Position, int Rating)> CreateTheTeam()
 
     }
     Console.WriteLine("Želite li povratak na glavni meni? y/n");
-   
     
-    //kreirati funkcije za trazenje scakog od ovih igraca 
-
     return team;
+}
+
+void ChangeRank(int enemyScore, int ourScore, Dictionary<string, (string Position, int Rank)> team)
+{
+    var newRanked = new Dictionary<string, (string Position, int Rank)>();
+    
+    foreach (var player in igrači)
+    {
+        var rank = 0;
+        if (team.Contains(player))
+        {
+            if (enemyScore > ourScore)
+            {
+                if (!player.Value.Position.Equals("FW"))
+                {
+                    rank = (int)(player.Value.Rating - player.Value.Rating * 0.02);
+                    newRanked.Add(player.Key, (player.Value.Position, rank));
+                }
+                else
+                    newRanked.Add(player.Key, (player.Value.Position, player.Value.Rating));
+            }
+            else if (enemyScore < ourScore)
+            {
+                if (player.Value.Position.Equals("FW") && !newRanked.ContainsKey(player.Key))
+                {
+                    rank = (int)(player.Value.Rating + player.Value.Rating * 0.05);
+                    newRanked.Add(player.Key, (player.Value.Position, rank));
+                }
+                else
+                {
+                    rank = (int)(player.Value.Rating + player.Value.Rating * 0.02);
+                    newRanked.Add(player.Key, (player.Value.Position, rank));
+                }
+            }
+        }
+        else
+            newRanked.Add(player.Key, (player.Value.Position, player.Value.Rating));
+    }
+
+    igrači = newRanked;
+}
+
+
+void AddNewPointToThePlayer(string name, int newRating)
+{
+    var temp = new Dictionary<string, (string Position, int Rating, int Goals)>();
+
+    foreach (var archer in strijelci)
+    {
+        if (archer.Key.Equals(name))
+        {
+            temp.Add(archer.Key, (archer.Value.Position, archer.Value.Rating, archer.Value.Goals + newRating));
+        }
+        else
+            temp.Add(archer.Key, (archer.Value.Position, archer.Value.Rating, archer.Value.Goals));
+    }
+
+    strijelci = temp;
 }
 
 void PlayTheGame()
 {
+    var utakmica = 0;
+    
+    if (igrači is null)
+        return;
+
     var team = CreateTheTeam();
 
-    foreach (var player in team)
+    while (utakmica <= 6)
     {
-        Console.WriteLine($"player {player.Key} on position {player.Value.Position}");
+
+        Random random = new Random();
+
+
+        int goals1 = random.Next(1, 10);
+        int Ourgoals = random.Next(1, 10);
+/*
+        Console.WriteLine("Unesite naš tim!");
+        var name2 = Console.ReadLine();
+        
+        team1.Add(name2, Ourgoals);
+
+        Console.WriteLine("Unesite protivnički tim!");
+        var name = Console.ReadLine();
+        
+
+        team2.Add(name, goals1);
+*/
+        for (var i = 0; i < Ourgoals; i++)
+        {
+            int index2 = random.Next(team.Count);
+            var strijelac = team.ElementAt(index2);
+            if (strijelci.ContainsKey(strijelac.Key))
+                AddNewPointToThePlayer(strijelac.Key, 1);
+            else
+                strijelci.Add(strijelac.Key, (strijelac.Value.Position, strijelac.Value.Rating, 1));
+            Console.WriteLine($"Igrač {strijelac.Key} je dao gol!");
+        }
+        
+       Console.WriteLine($"Protivnički tim je postigao {goals1} golova, a naš tim {Ourgoals} golova");
+
+        ChangeRank(goals1, Ourgoals, team);
+
+        utakmica++;
     }
 
-    Random random = new Random();
-    int index = random.Next(strijelci.Count);
-    
-    FindTheAttackers(team);
-    var strijelac = strijelci.ElementAt(index);
-    Console.WriteLine($"player {strijelac.Key} on position {strijelac.Value.Position} did the check");
+    Console.WriteLine("Želite li povratak na glavni meni? y/n");
+    var ans = Console.ReadLine();
 
-    int goals1 = random.Next(1, 10);
-
-    int Ourgoals = random.Next(1, 10); 
-    
-    Console.WriteLine($"tim 1 je postigao {goals1} golova, a naš tim {Ourgoals} golova");
-    
-    //ako gubi nas tim, mici nasem strijelcu odredeni postotak ranka!!!!
-    
+    if (ans.Equals("y"))
+        MainMenu();
 }
 
 //------------statistika---------------------
+
 void PrintPlayersNoOrder()
 {
+    if (igrači is null)
+        return;
+
     igrači.ToList().ForEach(player => Console.WriteLine($"Igrač {player.Key}"));
     Console.WriteLine("Želite li povratak na glavni meni? y/n");
     var ans = Console.ReadLine();
@@ -185,6 +262,9 @@ void PrintPlayersNoOrder()
 
 void PrintPlayersAsc()
 {
+    if (igrači is null)
+        return;
+
     var ordered = igrači.OrderBy(x => x.Value.Rating).ToDictionary(x => x.Key, x => (x.Value.Position, x.Value.Rating));
     
     ordered.ToList().ForEach(player => Console.WriteLine($"Igrač {player.Key}  s ratingom {player.Value.Rating}"));
@@ -197,8 +277,11 @@ void PrintPlayersAsc()
 
 void PrintPlayersDesc()
 {
+    if (igrači is null)
+        return;
+
     var descending = igrači.OrderByDescending(u => u.Value.Rating)
-                                                     .ToDictionary(z => z.Key, y=>(y.Value.Position, y.Value.Rating));
+                                                 .ToDictionary(z => z.Key, y=>(y.Value.Position, y.Value.Rating));
     descending.ToList().ForEach(player => Console.WriteLine($"Igrač {player.Key} s ratingom {player.Value.Rating}"));
     Console.WriteLine("Želite li povratak na glavni meni? y/n");
     var ans = Console.ReadLine();
@@ -264,6 +347,41 @@ void PrintPlayersByPosition()
 
 }
 
+Dictionary<string, (string Position, int Rating)> GetPlayersSortByPosition()
+{
+    var sort = igrači.OrderByDescending(x => x.Value.Rating)
+        .ThenBy(x => x.Value.Position)
+        .ToDictionary(x => x.Key, x => (x.Value.Position, x.Value.Rating));
+    
+    return sort;
+}
+
+
+void PrintTopPlayers()
+{
+    if (igrači is null)
+        return;
+    
+
+    var GKSort = GetPlayersSortByPosition();
+
+    var count = 0;
+
+    foreach (var player in GKSort)
+    {
+        if(count is 11)
+            break;
+        
+        Console.WriteLine($"Igrač {player.Key} na poziciji {player.Value.Position} s ratingom {player.Value.Rating}");
+        count++;
+    }
+}
+
+void PrintArchersAndGoals()
+{
+    strijelci.ToList().ForEach(strijelac => Console.WriteLine($"Strijelac je {strijelac.Key} s golovima {strijelac.Value.Goals}"));
+}
+
 void PrintPlayers()
 {
     var input = 0;
@@ -310,12 +428,18 @@ void PrintPlayers()
             PrintPlayersByPosition();
             break;
         case 7:
+            Console.WriteLine("Izabrali ste opciju Ispis top 11 igrača po pozicijama");
+            PrintTopPlayers();
             break;
         case 8:
+            Console.WriteLine("Izabrali ste opciju Ispis strijelaca s golovima");
+            PrintArchersAndGoals();
             break;
         case 9:
             break;
         case 10:
+            break;
+        case 11:
             break;
     }
     Console.WriteLine("Želite li povratak na glavni meni? y/n");
@@ -661,4 +785,3 @@ switch (izbor)
 }
 
 MainMenu();
-
