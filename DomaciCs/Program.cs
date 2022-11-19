@@ -1,4 +1,6 @@
 ﻿
+using System.Threading.Channels;
+
 var izbornik = new Dictionary<int, string>()
 {
     {1, "Odradi trening"},
@@ -33,8 +35,8 @@ var igrači = new Dictionary<string, (string Position, int Rating)>()
 };
 
 var strijelci = new Dictionary<string, (string Position, int Rating, int Goals)>(){};
-var team1 = new Dictionary<string, int>();
-var team2 = new Dictionary<string, int>();
+var teamCRO = new Dictionary<string, List<int>>(){};
+var teamForeign = new Dictionary<string, List<int>>(){};
 
 //----------- odrađivanje treninga----------------------------
 
@@ -54,6 +56,9 @@ void Training()
     
     foreach (var dict in igrači)
     {
+        if(igrači.Equals(null))
+            return;
+        
         updated.Add(dict.Key, (dict.Value.Position, ReturnValue(dict.Value.Rating)));
     }
 
@@ -142,7 +147,7 @@ void ChangeRank(int enemyScore, int ourScore, Dictionary<string, (string Positio
         var rank = 0;
         if (team.Contains(player))
         {
-            if (enemyScore > ourScore)
+            if (enemyScore > ourScore && !newRanked.ContainsKey(player.Key))
             {
                 if (!player.Value.Position.Equals("FW"))
                 {
@@ -152,9 +157,9 @@ void ChangeRank(int enemyScore, int ourScore, Dictionary<string, (string Positio
                 else
                     newRanked.Add(player.Key, (player.Value.Position, player.Value.Rating));
             }
-            else if (enemyScore < ourScore)
+            else if (enemyScore < ourScore && !newRanked.ContainsKey(player.Key))
             {
-                if (player.Value.Position.Equals("FW") && !newRanked.ContainsKey(player.Key))
+                if (player.Value.Position.Equals("FW"))
                 {
                     rank = (int)(player.Value.Rating + player.Value.Rating * 0.05);
                     newRanked.Add(player.Key, (player.Value.Position, rank));
@@ -195,31 +200,44 @@ void PlayTheGame()
 {
     var utakmica = 0;
     
-    if (igrači is null)
-        return;
+         if (igrači is null)
+            return;
 
-    var team = CreateTheTeam();
+        var team = CreateTheTeam();
 
-    while (utakmica <= 6)
+        Console.WriteLine("Unesite naš tim!");
+        var name2 = Console.ReadLine();
+        var pointsHR = new List<int>();
+        var pointsFR = new List<int>();
+        
+        teamCRO.Add(name2, pointsHR);
+        
+        while (utakmica < 6)
     {
+        Console.WriteLine("Unesite protivnički tim!");
+        var name = Console.ReadLine();
+
+        if (teamForeign.Keys.Contains(name))
+        {
+            while (teamForeign.ContainsKey(name))
+            {
+                Console.WriteLine($"Igra protiv {name} je odigrana");
+                Console.WriteLine("Unesite protivnički tim!");
+                name = Console.ReadLine();
+            }
+        }
 
         Random random = new Random();
 
 
-        int goals1 = random.Next(1, 10);
-        int Ourgoals = random.Next(1, 10);
-/*
-        Console.WriteLine("Unesite naš tim!");
-        var name2 = Console.ReadLine();
+        int goals1 = random.Next(1, 8);
+        int Ourgoals = random.Next(1, 8);
         
-        team1.Add(name2, Ourgoals);
-
-        Console.WriteLine("Unesite protivnički tim!");
-        var name = Console.ReadLine();
+        pointsFR.Add(goals1);
+        teamForeign.Add(name, pointsFR);
         
+        teamCRO[name2].Add(Ourgoals);
 
-        team2.Add(name, goals1);
-*/
         for (var i = 0; i < Ourgoals; i++)
         {
             int index2 = random.Next(team.Count);
@@ -382,6 +400,22 @@ void PrintArchersAndGoals()
     strijelci.ToList().ForEach(strijelac => Console.WriteLine($"Strijelac je {strijelac.Key} s golovima {strijelac.Value.Goals}"));
 }
 
+void PrintAllResultsOfGroup()
+{
+    var counter = 1;
+    foreach (var item in teamCRO)
+    {
+        Console.WriteLine($"team {item.Key} je postigao rezultate u utakmicama:");
+        for (int i = 0; i < item.Value.Count; i++)
+        {
+            var element = teamForeign.ElementAt(i).Value;
+            Console.WriteLine($"{counter}. {i} - {element[i]}");
+            counter++;
+        }
+        
+    }
+}
+
 void PrintPlayers()
 {
     var input = 0;
@@ -436,6 +470,8 @@ void PrintPlayers()
             PrintArchersAndGoals();
             break;
         case 9:
+            Console.WriteLine("Izabrali ste opciju Ispis svih rezultata ekipe");
+            PrintAllResultsOfGroup();
             break;
         case 10:
             break;
