@@ -36,7 +36,11 @@ var igrači = new Dictionary<string, (string Position, int Rating)>()
 
 var strijelci = new Dictionary<string, (string Position, int Rating, int Goals)>(){};
 var teamCRO = new Dictionary<string, List<int>>(){};
-var teamForeign = new Dictionary<string, List<int>>(){};
+var ourWins = 0;
+var givenGoalsCro = 0;
+var teamForeign = new Dictionary<string, int>(){};
+var foreignWins = 0;
+var givenGoalsFOR = 0;
 
 //----------- odrađivanje treninga----------------------------
 
@@ -149,17 +153,19 @@ void ChangeRank(int enemyScore, int ourScore, Dictionary<string, (string Positio
         {
             if (enemyScore > ourScore && !newRanked.ContainsKey(player.Key))
             {
-                if (!player.Value.Position.Equals("FW"))
+                if (!strijelci.ContainsKey(player.Key))
                 {
                     rank = (int)(player.Value.Rating - player.Value.Rating * 0.02);
                     newRanked.Add(player.Key, (player.Value.Position, rank));
                 }
                 else
                     newRanked.Add(player.Key, (player.Value.Position, player.Value.Rating));
+
+                foreignWins++;
             }
-            else if (enemyScore < ourScore && !newRanked.ContainsKey(player.Key))
+            else
             {
-                if (player.Value.Position.Equals("FW"))
+                if (strijelci.ContainsKey(player.Key))
                 {
                     rank = (int)(player.Value.Rating + player.Value.Rating * 0.05);
                     newRanked.Add(player.Key, (player.Value.Position, rank));
@@ -169,6 +175,8 @@ void ChangeRank(int enemyScore, int ourScore, Dictionary<string, (string Positio
                     rank = (int)(player.Value.Rating + player.Value.Rating * 0.02);
                     newRanked.Add(player.Key, (player.Value.Position, rank));
                 }
+
+                ourWins++;
             }
         }
         else
@@ -233,9 +241,8 @@ void PlayTheGame()
         int goals1 = random.Next(1, 8);
         int Ourgoals = random.Next(1, 8);
         
-        pointsFR.Add(goals1);
-        teamForeign.Add(name, pointsFR);
-        
+        teamForeign.Add(name, goals1);
+
         teamCRO[name2].Add(Ourgoals);
 
         for (var i = 0; i < Ourgoals; i++)
@@ -405,14 +412,97 @@ void PrintAllResultsOfGroup()
     var counter = 1;
     foreach (var item in teamCRO)
     {
-        Console.WriteLine($"team {item.Key} je postigao rezultate u utakmicama:");
+
         for (int i = 0; i < item.Value.Count; i++)
         {
+            var list = item.Value;
+            Console.WriteLine($"{item.Key} - {teamForeign.ElementAt(i).Key}");
             var element = teamForeign.ElementAt(i).Value;
-            Console.WriteLine($"{counter}. {i} - {element[i]}");
+            Console.WriteLine($"{counter}. {list[i]}   -   {element}");
             counter++;
         }
+
+    }
+}
+
+
+void PlayGame(string name)
+{
+    for (int i = 0; i < teamForeign.Count; i++)
+    {
+        if (!teamForeign.ElementAt(i).Key.Equals(name))
+        {
+            Console.WriteLine($"{teamForeign.ElementAt(i).Key} - {name}");
+            
+            Random random = new Random();
+
+
+            int result1 = random.Next(1, 8);
+            int result2 = random.Next(1, 8);
+
+            Console.WriteLine($"{result1} - {result2}");
+
+            if (result1 < result2)
+            {
+                foreignWins++;
+            }
+            else
+            {
+                givenGoalsFOR++;
+            }
+        }
+    }
+}
+
+void PrintAllResultsOfTeams()
+{
+    foreach (var team in teamForeign)
+    {
+        PlayGame(team.Key);
+    }
+}
+
+void PrintTeamTable()
+{
+    var tempTable = new List<(string Team, int score, double goalDifference)>();
+    foreach(var item in teamForeign)
+    {
+        var score = item.Value + foreignWins * 3;
+        var goalDifference = (double) item.Value /ourWins;
+        tempTable.Add((item.Key, score, goalDifference));
+    }
+
+    foreach (var item in teamCRO)
+    {
+        var sum = 0;
+        var goalDiff = 0.0;
         
+        var list = item.Value;
+        for (int i = 0; i < list.Count; i++)
+        {
+            var score = list[i];
+            var goalDifference = list[i];
+            sum += score;
+            goalDiff += goalDifference;
+        }
+
+        sum = sum + ourWins * 3;
+        
+        if(foreignWins is 0)
+            goalDiff = goalDiff;
+        else
+            goalDiff = goalDiff / foreignWins;
+        
+        tempTable.Add((item.Key, sum, goalDiff));
+    }
+    
+    Console.WriteLine("Pozicija  |  Ekipa  |  Stečeni bodovi  |  Gol Razlike ");
+    
+    var tableOfTeams= tempTable.OrderByDescending(x => x.score).ToList();
+    
+    for(var i = 0; i<tableOfTeams.Count; i++)
+    {
+        Console.WriteLine($"{i+1}.       {tableOfTeams[i].Team}      {tableOfTeams[i].score}       {tableOfTeams[i].goalDifference} \n \n");
     }
 }
 
@@ -474,8 +564,12 @@ void PrintPlayers()
             PrintAllResultsOfGroup();
             break;
         case 10:
+            Console.WriteLine("Izabrali ste opciju Ispis svih rezultata ekipe");
+            PrintAllResultsOfTeams();
             break;
         case 11:
+            Console.WriteLine("Izabrali ste opciju Ispis svih rezultata ekipe");
+            PrintTeamTable();
             break;
     }
     Console.WriteLine("Želite li povratak na glavni meni? y/n");
