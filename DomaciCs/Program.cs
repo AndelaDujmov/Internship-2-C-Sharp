@@ -225,15 +225,16 @@ void PlayTheGame()
         Console.WriteLine("Unesite protivnički tim!");
         var name = Console.ReadLine();
 
-        if (teamForeign.Keys.Contains(name))
+        if (teamForeign.Keys.Contains(name) || teamCRO.Keys.Contains(name))
         {
-            while (teamForeign.ContainsKey(name))
+            while (teamForeign.ContainsKey(name) && teamCRO.ContainsKey(name))
             {
                 Console.WriteLine($"Igra protiv {name} je odigrana");
                 Console.WriteLine("Unesite protivnički tim!");
                 name = Console.ReadLine();
             }
         }
+        
 
         Random random = new Random();
 
